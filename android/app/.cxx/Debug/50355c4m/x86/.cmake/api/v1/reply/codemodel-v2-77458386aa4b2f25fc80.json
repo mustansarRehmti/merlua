@@ -114,35 +114,35 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "appmodules::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-appmodules-Debug-6a8919842a6940ca10bf.json",
+					"jsonFile" : "target-appmodules-Debug-6526aa1bc746592a2e4f.json",
 					"name" : "appmodules",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "react_codegen_rnreanimated::@8afabad14bfffa3f8b9a",
-					"jsonFile" : "target-react_codegen_rnreanimated-Debug-4613e45de15484e84a89.json",
+					"jsonFile" : "target-react_codegen_rnreanimated-Debug-db63fd7dd3205d968d80.json",
 					"name" : "react_codegen_rnreanimated",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 3,
 					"id" : "react_codegen_rnscreens::@25bcbd507e98d3a854ad",
-					"jsonFile" : "target-react_codegen_rnscreens-Debug-acc10502c68f934dff5d.json",
+					"jsonFile" : "target-react_codegen_rnscreens-Debug-ba5fe8a1957894965768.json",
 					"name" : "react_codegen_rnscreens",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 4,
 					"id" : "react_codegen_rnworklets::@68f58d84d4754f193387",
-					"jsonFile" : "target-react_codegen_rnworklets-Debug-1b89b882bb8fe2a62e1b.json",
+					"jsonFile" : "target-react_codegen_rnworklets-Debug-75e391c39291f8d4c648.json",
 					"name" : "react_codegen_rnworklets",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 2,
 					"id" : "react_codegen_safeareacontext::@7984cd80db47aa7b952a",
-					"jsonFile" : "target-react_codegen_safeareacontext-Debug-3016853dbac8aab5a568.json",
+					"jsonFile" : "target-react_codegen_safeareacontext-Debug-4ecfe1edac512ed9355c.json",
 					"name" : "react_codegen_safeareacontext",
 					"projectIndex" : 0
 				}
@@ -152,7 +152,7 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/armeabi-v7a",
+		"build" : "C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/x86",
 		"source" : "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native/ReactAndroid/cmake-utils/default-app-setup"
 	},
 	"version" : 

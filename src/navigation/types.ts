@@ -1,10 +1,20 @@
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
-  ForgotPassword: { email?: string };
+  Verification: { email: string };
+  forgot: { email?: string };
+  MagicLinkCheck: { email: string };
+};
+
+export type BookingStackParamList = {
+  SelectService: undefined;
+  SelectStaff: undefined;
+  SelectSlot: undefined;
+  CustomerDetails: undefined;
+  BookingReview: undefined;
 };
 
 export type RootStackParamList = {
   Auth: undefined;
-  MainApp: undefined; // We will build this in Phase 2
+  BookingFlow: undefined; // Connected directly upon login/auth bypass
 };
