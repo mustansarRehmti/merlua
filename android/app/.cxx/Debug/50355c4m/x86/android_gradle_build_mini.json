@@ -1,0 +1,67 @@
+{
+  "buildFiles": [
+    "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native-reanimated\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
+    "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native-safe-area-context\\android\\src\\main\\jni\\CMakeLists.txt",
+    "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native-screens\\android\\src\\main\\jni\\CMakeLists.txt",
+    "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native-worklets\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
+    "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native\\ReactAndroid\\cmake-utils\\default-app-setup\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\Rehmati\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\android\\app\\.cxx\\Debug\\50355c4m\\x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\Rehmati\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\android\\app\\.cxx\\Debug\\50355c4m\\x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "react_codegen_rnreanimated::@8afabad14bfffa3f8b9a": {
+      "artifactName": "react_codegen_rnreanimated",
+      "abi": "x86",
+      "runtimeFiles": []
+    },
+    "react_codegen_safeareacontext::@7984cd80db47aa7b952a": {
+      "artifactName": "react_codegen_safeareacontext",
+      "abi": "x86",
+      "output": "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\android\\app\\build\\intermediates\\cxx\\Debug\\50355c4m\\obj\\x86\\libreact_codegen_safeareacontext.so",
+      "runtimeFiles": [
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\3c01aea05d2737e987399f1309ae090e\\workspace\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so",
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\2321ffcfab7439b6200de4724cf7ba76\\workspace\\transformed\\react-android-0.85.3-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\2321ffcfab7439b6200de4724cf7ba76\\workspace\\transformed\\react-android-0.85.3-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so"
+      ]
+    },
+    "react_codegen_rnscreens::@25bcbd507e98d3a854ad": {
+      "artifactName": "react_codegen_rnscreens",
+      "abi": "x86",
+      "output": "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\android\\app\\build\\intermediates\\cxx\\Debug\\50355c4m\\obj\\x86\\libreact_codegen_rnscreens.so",
+      "runtimeFiles": [
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\2321ffcfab7439b6200de4724cf7ba76\\workspace\\transformed\\react-android-0.85.3-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so",
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\2321ffcfab7439b6200de4724cf7ba76\\workspace\\transformed\\react-android-0.85.3-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\3c01aea05d2737e987399f1309ae090e\\workspace\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so"
+      ]
+    },
+    "appmodules::@6890427a1f51a3e7e1df": {
+      "artifactName": "appmodules",
+      "abi": "x86",
+      "output": "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\android\\app\\build\\intermediates\\cxx\\Debug\\50355c4m\\obj\\x86\\libappmodules.so",
+      "runtimeFiles": [
+        "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\android\\app\\build\\intermediates\\cxx\\Debug\\50355c4m\\obj\\x86\\libreact_codegen_safeareacontext.so",
+        "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\android\\app\\build\\intermediates\\cxx\\Debug\\50355c4m\\obj\\x86\\libreact_codegen_rnscreens.so",
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\3c01aea05d2737e987399f1309ae090e\\workspace\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so",
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\2321ffcfab7439b6200de4724cf7ba76\\workspace\\transformed\\react-android-0.85.3-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
+        "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\2321ffcfab7439b6200de4724cf7ba76\\workspace\\transformed\\react-android-0.85.3-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so"
+      ]
+    },
+    "react_codegen_rnworklets::@68f58d84d4754f193387": {
+      "artifactName": "react_codegen_rnworklets",
+      "abi": "x86",
+      "runtimeFiles": []
+    }
+  }
+}
