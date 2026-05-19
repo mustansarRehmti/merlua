@@ -10,8 +10,8 @@ export type BookingStackParamList = {
   SelectService: undefined;
   SelectStaff: undefined;
   SelectSlot: undefined;
-  CustomerDetails: undefined;
-  BookingReview: undefined;
+  BookingReview: undefined; 
+  CustomerDetails: { remarks?: string } | undefined;
 };
 
 export type RootStackParamList = {

@@ -1,77 +1,151 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BookingHeader } from '../components/booking-header';
+import { StaffSelector } from '../components/staff-selector';
+import { Theme } from '../theme/theme';
 
-export function SelectStaffScreen() {
-  const staffMembers = [
-    { id: 'stf-1', name: 'Amara Vance', role: 'Master Stylist' },
-    { id: 'stf-2', name: 'Marcus Sterling', role: 'Color Expert' },
-  ];
+// Mocking strict expert listings returned from your endpoint references
+const MOCK_STAFF_DATA = [
+  {
+    id: 'staff-any',
+    name: 'Any Available Professional',
+    role: 'Allocates the optimal specialist matching your session choice automatically.',
+    isAnyStaffVariant: true
+  },
+  {
+    id: 'stf-101',
+    name: 'Elena Rostova',
+    role: 'Master Nail Architect & Gel Specialist',
+    isAnyStaffVariant: false
+  },
+  {
+    id: 'stf-102',
+    name: 'Marcus Vance',
+    role: 'Senior Lash Extension Designer',
+    isAnyStaffVariant: false
+  },
+  {
+    id: 'stf-103',
+    name: 'Sasha Dubois',
+    role: 'Editorial Colorist & Technical Director',
+    isAnyStaffVariant: false
+  }
+];
+
+export function SelectStaffScreen({ navigation }: any) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+
+  // Search filter excluding the premium structural placeholder "Any Available Professional" 
+  const filteredStaff = MOCK_STAFF_DATA.filter(staff => {
+    if (staff.isAnyStaffVariant) return true;
+    return staff.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.stepTitle}>Choose Professional</Text>
-        <Text style={styles.stepSubtitle}>Step 2 of 5</Text>
+    <SafeAreaView style={styles.outerContainer} edges={['top', 'left', 'right']}>
+      {/* Back capability wired to step 2 header */}
+      <BookingHeader 
+        title="Select Professional" 
+        step={2} 
+        onBackPress={() => navigation.goBack()} 
+      />
+
+      {/* Styled Entry Text Box matching SelectService precisely */}
+      <View style={styles.searchBoxFrame}>
+        <TextInput
+          style={styles.inputField}
+          placeholder="Filter available specialists..."
+          placeholderTextColor={Theme.colors.border}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCorrect={false}
+        />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity style={[styles.anyStaffCard, styles.selectedCard]}>
-          <View style={styles.radioCircleActive} />
-          <View>
-            <Text style={styles.anyStaffText}>Any Available Professional</Text>
-            <Text style={styles.anyStaffSub}>Matches you with the best open window</Text>
-          </View>
-        </TouchableOpacity>
+      {/* Primary Scrollable Staff Selection Grid */}
+      <FlatList
+        data={filteredStaff}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.scrollListContainer}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <StaffSelector
+            id={item.id}
+            name={item.name}
+            role={item.role}
+            isSelected={selectedStaffId === item.id}
+            onSelect={() => setSelectedStaffId(item.id)}
+            isAnyStaffVariant={item.isAnyStaffVariant}
+          />
+        )}
+      />
 
-        <Text style={styles.sectionHeader}>Our Specialists</Text>
-        {staffMembers.map((member) => (
-          <TouchableOpacity key={member.id} style={styles.staffCard}>
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitials}>{member.name.charAt(0)}</Text>
-            </View>
-            <View style={styles.staffMeta}>
-              <Text style={styles.staffName}>{member.name}</Text>
-              <Text style={styles.staffRole}>{member.role}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+      {/* Unified Bottom Control Actions Footer */}
+      <View style={styles.stickyFooter}>
+        <TouchableOpacity
+          style={[styles.primarySubmitBtn, !selectedStaffId && styles.primarySubmitBtnDisabled]}
+          disabled={!selectedStaffId}
+          onPress={() => navigation.navigate('BookingReview')}
+          activeOpacity={0.9}
+        >
+          <Text style={styles.primarySubmitBtnText}>Confirm Professional & Proceed</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0EEE6' },
-  header: { paddingHorizontal: 24, paddingTop: 20, marginBottom: 16 },
-  stepTitle: { fontSize: 24, color: '#0F0F0F', fontWeight: '700' },
-  stepSubtitle: { fontSize: 13, color: '#666', marginTop: 4 },
-  scrollContent: { paddingHorizontal: 24 },
-  anyStaffCard: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E6E3D8',
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
+  outerContainer: {
+    flex: 1,
+    backgroundColor: Theme.colors.softIvory
   },
-  selectedCard: { borderColor: '#0F0F0F', borderWidth: 1.5 },
-  radioCircleActive: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#0F0F0F', marginRight: 16 },
-  anyStaffText: { fontSize: 16, fontWeight: '600', color: '#0F0F0F' },
-  anyStaffSub: { fontSize: 13, color: '#666', marginTop: 2 },
-  sectionHeader: { fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
-  staffCard: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E6E3D8',
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+  searchBoxFrame: {
+    marginHorizontal: Theme.spacing.m,
+    marginTop: Theme.spacing.s,
+    marginBottom: Theme.spacing.xs
   },
-  avatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0F0F0F', justifyContent: 'center', alignItems: 'center' },
-  avatarInitials: { color: '#F0EEE6', fontWeight: '600' },
-  staffMeta: { marginLeft: 16 },
-  staffName: { fontSize: 16, color: '#0F0F0F', fontWeight: '600' },
-  staffRole: { fontSize: 14, color: '#777', marginTop: 2 },
+  inputField: {
+    backgroundColor: Theme.colors.white,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    paddingHorizontal: Theme.spacing.s,
+    paddingVertical: 14,
+    fontSize: 14,
+    color: Theme.colors.textPrimary,
+    fontFamily: Theme.fonts.regular,
+    borderRadius: 0
+  },
+  scrollListContainer: {
+    paddingHorizontal: Theme.spacing.m,
+    paddingTop: 12,
+    paddingBottom: Theme.spacing.l
+  },
+  stickyFooter: {
+    paddingHorizontal: Theme.spacing.m,
+    paddingVertical: Theme.spacing.s,
+    borderTopWidth: 1,
+    borderColor: Theme.colors.warmStone,
+    backgroundColor: Theme.colors.white
+  },
+  primarySubmitBtn: {
+    backgroundColor: Theme.colors.luxuryBlack,
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 0
+  },
+  primarySubmitBtnDisabled: {
+    backgroundColor: Theme.colors.border,
+    opacity: 0.4
+  },
+  primarySubmitBtnText: {
+    fontFamily: Theme.fonts.bold,
+    color: Theme.colors.softIvory,
+    fontSize: 13,
+    textTransform: 'uppercase',
+    letterSpacing: 2
+  }
 });

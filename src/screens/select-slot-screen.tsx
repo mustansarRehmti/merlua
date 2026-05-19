@@ -1,62 +1,84 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { BookingLayout } from '../components/booking-layout';
+import { CalendarStrip } from '../components/calendar-strip';
+import { SlotPicker } from '../components/slot-picker';
+import { Theme } from '../theme/theme';
 
-export function SelectSlotScreen() {
-  const days = [
-    { day: 'Mon', date: '18' },
-    { day: 'Tue', date: '19' },
-    { day: 'Wed', date: '20' },
-    { day: 'Thu', date: '21' },
-  ];
+// Generate dynamic continuous upcoming dates matching premium calendar configurations
+const GENERATED_DATES = [
+  { dayName: 'Tue', dayNumber: '19', fullDate: '2026-05-19' },
+  { dayName: 'Wed', dayNumber: '20', fullDate: '2026-05-20' },
+  { dayName: 'Thu', dayNumber: '21', fullDate: '2026-05-21' },
+  { dayName: 'Fri', dayNumber: '22', fullDate: '2026-05-22' },
+  { dayName: 'Sat', dayNumber: '23', fullDate: '2026-05-23' },
+  { dayName: 'Sun', dayNumber: '24', fullDate: '2026-05-24' },
+  { dayName: 'Mon', dayNumber: '25', fullDate: '2026-05-25' },
+];
 
-  const genericSlots = ['09:00 AM', '10:30 AM', '01:00 PM', '02:30 PM', '04:00 PM'];
+const MOCK_TIME_SLOTS = [
+  '09:00 AM', '10:30 AM', '11:00 AM', '01:30 PM', '03:00 PM', '04:30 PM'
+];
+
+export function SelectSlotScreen({ navigation }: any) {
+  const [selectedDate, setSelectedDate] = useState('2026-05-19');
+  const [selectedSlot, setSelectedSlot] = useState('');
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.stepTitle}>Select Date & Time</Text>
-        <Text style={styles.stepSubtitle}>Step 3 of 5</Text>
-      </View>
+    <BookingLayout
+      step={3}
+      stepTitle="Select Slot"
+      onBackPress={() => navigation.goBack()}
+      onForwardPress={() => navigation.navigate('BookingReview')}
+      isForwardDisabled={!selectedSlot}
+      forwardLabel="Confirm Slot & Proceed"
+    >
+      <ScrollView style={styles.scrollCanvas} showsVerticalScrollIndicator={false}>
+        {/* Section Heading Metadata */}
+        <Text style={styles.sectionSectionMarker}>Available Dates</Text>
+        <CalendarStrip
+          dates={GENERATED_DATES}
+          selectedDate={selectedDate}
+          onDateSelect={(date) => { setSelectedDate(date); setSelectedSlot(''); }}
+        />
 
-      {/* Horizontal Strip */}
-      <View style={styles.stripContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {days.map((d, index) => (
-            <TouchableOpacity key={index} style={[styles.dateBubble, index === 1 && styles.activeDateBubble]}>
-              <Text style={[styles.dayText, index === 1 && styles.activeText]}>{d.day}</Text>
-              <Text style={[styles.dateText, index === 1 && styles.activeText]}>{d.date}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+        <View style={styles.spacingDivider} />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24 }}>
-        <Text style={styles.sessionHeader}>Available Slots</Text>
-        <View style={styles.gridContainer}>
-          {genericSlots.map((slot, idx) => (
-            <TouchableOpacity key={idx} style={styles.slotBadge}>
-              <Text style={styles.slotText}>{slot}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={styles.sectionSectionMarker}>Available Studio Allocations</Text>
+        <SlotPicker
+          slots={MOCK_TIME_SLOTS}
+          selectedSlot={selectedSlot}
+          onSlotSelect={setSelectedSlot}
+        />
+        
+        <View style={styles.bottomBuffer} />
       </ScrollView>
-    </View>
+    </BookingLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0EEE6' },
-  header: { paddingHorizontal: 24, paddingTop: 20, marginBottom: 16 },
-  stepTitle: { fontSize: 24, color: '#0F0F0F', fontWeight: '700' },
-  stepSubtitle: { fontSize: 13, color: '#666', marginTop: 4 },
-  stripContainer: { paddingLeft: 24, marginBottom: 24 },
-  dateBubble: { width: 60, height: 75, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E6E3D8', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  activeDateBubble: { backgroundColor: '#0F0F0F', borderColor: '#0F0F0F' },
-  dayText: { fontSize: 12, color: '#777', textTransform: 'uppercase' },
-  dateText: { fontSize: 18, fontWeight: '700', color: '#0F0F0F', marginTop: 4 },
-  activeText: { color: '#F0EEE6' },
-  sessionHeader: { fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 },
-  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  slotBadge: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E6E3D8', paddingVertical: 14, paddingHorizontal: 16, width: '31%', alignItems: 'center' },
-  slotText: { fontSize: 13, color: '#0F0F0F', fontWeight: '600' },
+  scrollCanvas: {
+    flex: 1,
+    backgroundColor: Theme.colors.softIvory
+  },
+  sectionSectionMarker: {
+    fontFamily: Theme.fonts.bold,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    color: Theme.colors.textSecondary,
+    marginLeft: Theme.spacing.m,
+    marginTop: Theme.spacing.m,
+    marginBottom: Theme.spacing.xs
+  },
+  spacingDivider: {
+    height: 1,
+    backgroundColor: Theme.colors.warmStone,
+    marginHorizontal: Theme.spacing.m,
+    marginVertical: Theme.spacing.s
+  },
+  bottomBuffer: {
+    height: Theme.spacing.xl
+  }
 });

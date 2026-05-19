@@ -1,5 +1,6 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, interpolateColor } from 'react-native-reanimated';
 import { Theme } from '../theme/theme';
 
 interface DateItem {
@@ -14,24 +15,56 @@ interface CalendarStripProps {
   onDateSelect: (date: string) => void;
 }
 
+function CalendarDayBubble({ item, isSelected, onSelect }: { item: DateItem; isSelected: boolean; onSelect: () => void }) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withTiming(isSelected ? 1 : 0, { duration: 200 });
+  }, [isSelected, progress]);
+
+  const animatedBubbleStyle = useAnimatedStyle(() => {
+    const backgroundColor = interpolateColor(
+      progress.value,
+      [0, 1],
+      [Theme.colors.white, Theme.colors.luxuryBlack]
+    );
+    return {
+      backgroundColor,
+      borderColor: isSelected ? Theme.colors.luxuryBlack : Theme.colors.border
+    };
+  });
+
+  const animatedTextStyle = useAnimatedStyle(() => {
+    const color = interpolateColor(
+      progress.value,
+      [0, 1],
+      [Theme.colors.textPrimary, Theme.colors.softIvory]
+    );
+    return { color };
+  });
+
+  return (
+    <TouchableOpacity activeOpacity={0.9} onPress={onSelect}>
+      <Animated.View style={[styles.dayBubble, animatedBubbleStyle]}>
+        <Animated.Text style={[styles.dayName, animatedTextStyle]}>{item.dayName}</Animated.Text>
+        <Animated.Text style={[styles.dayNumber, animatedTextStyle]}>{item.dayNumber}</Animated.Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
 export function CalendarStrip({ dates, selectedDate, onDateSelect }: CalendarStripProps) {
   return (
     <View style={styles.wrapper}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
-        {dates.map((item) => {
-          const isSelected = selectedDate === item.fullDate;
-          return (
-            <TouchableOpacity
-              key={item.fullDate}
-              style={[styles.dayBubble, isSelected && styles.dayBubbleActive]}
-              onPress={() => onDateSelect(item.fullDate)}
-              activeOpacity={0.9}
-            >
-              <Text style={[styles.dayName, isSelected && styles.textActive]}>{item.dayName}</Text>
-              <Text style={[styles.dayNumber, isSelected && styles.textActive]}>{item.dayNumber}</Text>
-            </TouchableOpacity>
-          );
-        })}
+        {dates.map((item) => (
+          <CalendarDayBubble
+            key={item.fullDate}
+            item={item}
+            isSelected={selectedDate === item.fullDate}
+            onSelect={() => onDateSelect(item.fullDate)}
+          />
+        ))}
       </ScrollView>
     </View>
   );
@@ -39,42 +72,31 @@ export function CalendarStrip({ dates, selectedDate, onDateSelect }: CalendarStr
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: 24,
-    backgroundColor: Theme.colors.softIvory,
+    paddingVertical: Theme.spacing.xs,
+    backgroundColor: Theme.colors.softIvory
   },
   scrollContainer: {
-    paddingLeft: 24,
-    paddingVertical: 4,
+    paddingLeft: Theme.spacing.m,
+    paddingRight: Theme.spacing.xs
   },
   dayBubble: {
-    width: 62,
-    height: 76,
-    backgroundColor: '#FFFFFF',
+    width: 66,
+    height: 80,
     borderWidth: 1,
-    borderColor: '#E5E2D9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-    borderRadius: 0,
-  },
-  dayBubbleActive: {
-    backgroundColor: Theme.colors.luxuryBlack,
-    borderColor: Theme.colors.luxuryBlack,
+    borderRadius: 0
   },
   dayName: {
     fontFamily: Theme.fonts.medium,
     fontSize: 11,
     textTransform: 'uppercase',
-    color: Theme.colors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: 0.5
   },
   dayNumber: {
     fontFamily: Theme.fonts.bold,
-    fontSize: 18,
-    color: Theme.colors.luxuryBlack,
-    marginTop: 4,
-  },
-  textActive: {
-    color: Theme.colors.softIvory,
-  },
+    fontSize: 20,
+    marginTop: 4
+  }
 });
