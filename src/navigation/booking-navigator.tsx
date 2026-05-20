@@ -7,6 +7,7 @@ import { BookingReviewScreen } from '../screens/booking-review-screen';
 import { CustomerDetailsScreen } from '../screens/customer-details-screen';
 import { AppointmentsDashboardScreen } from '../screens/appointments-dashboard-screen'; 
 import { BookingStackParamList } from './types';
+import { ProfileScreen } from '../screens/profile-screen';
 
 const Stack = createNativeStackNavigator<BookingStackParamList>();
 
@@ -19,6 +20,7 @@ export function BookingNavigator() {
       <Stack.Screen name="BookingReview" component={BookingReviewScreen} />
       <Stack.Screen name="CustomerDetails" component={CustomerDetailsScreen} />
       <Stack.Screen name="AppointmentsDashboard" component={AppointmentsDashboardScreen} />
+       <Stack.Screen name="Profle" component={ProfileScreen} />
     </Stack.Navigator>
   );
 }

@@ -12,6 +12,7 @@ export type BookingStackParamList = {
   SelectSlot: undefined;
   BookingReview: undefined; 
   CustomerDetails: { remarks?: string } | undefined;
+  Profile: undefined;
 };
 
 export type RootStackParamList = {

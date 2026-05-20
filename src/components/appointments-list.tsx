@@ -3,14 +3,22 @@ import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native
 import { AppointmentCard, Appointment } from './appointment-card';
 import { Theme } from '../theme/theme';
 
+// 1. ADD THE MISSING TYPING METRIC HERE
 interface AppointmentsListProps {
   data: Appointment[];
   onCancelItem: (id: string) => void;
   onRescheduleItem: (id: string) => void;
   onNavigateToBooking: () => void;
+  onItemPress: (item: Appointment) => void; // Added type parameter definition
 }
 
-export function AppointmentsList({ data, onCancelItem, onRescheduleItem, onNavigateToBooking }: AppointmentsListProps) {
+export function AppointmentsList({ 
+  data, 
+  onCancelItem, 
+  onRescheduleItem, 
+  onNavigateToBooking,
+  onItemPress // Destructure it cleanly here
+}: AppointmentsListProps) {
   return (
     <FlatList
       data={data}
@@ -30,11 +38,17 @@ export function AppointmentsList({ data, onCancelItem, onRescheduleItem, onNavig
         </View>
       }
       renderItem={({ item }) => (
-        <AppointmentCard
-          item={item}
-          onCancelPress={onCancelItem}
-          onReschedulePress={onRescheduleItem}
-        />
+        /* 2. WRAP CARD SO CLICKING THE ENTIRE ROW TRIGGERS THE DETAILED BLOCK */
+        <TouchableOpacity 
+          activeOpacity={0.9} 
+          onPress={() => onItemPress(item)}
+        >
+          <AppointmentCard
+            item={item}
+            onCancelPress={onCancelItem}
+            onReschedulePress={onRescheduleItem}
+          />
+        </TouchableOpacity>
       )}
     />
   );
