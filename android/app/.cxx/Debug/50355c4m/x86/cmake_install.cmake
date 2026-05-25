@@ -44,6 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
+  include("C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/x86/NitroModulesSpec_autolinked_build/cmake_install.cmake")
   include("C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/x86/rnreanimated_autolinked_build/cmake_install.cmake")
   include("C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/x86/safeareacontext_autolinked_build/cmake_install.cmake")
   include("C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/x86/rnscreens_autolinked_build/cmake_install.cmake")

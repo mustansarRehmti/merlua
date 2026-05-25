@@ -1,3 +1,4 @@
+C:\Users\Rehmati\Desktop\MyNewProject\node_modules\react-native-nitro-modules\android\build\generated\source\codegen\jni\CMakeLists.txt
 C:\Users\Rehmati\Desktop\MyNewProject\node_modules\react-native-reanimated\android\build\generated\source\codegen\jni\CMakeLists.txt
 C:\Users\Rehmati\Desktop\MyNewProject\node_modules\react-native-safe-area-context\android\src\main\jni\CMakeLists.txt
 C:\Users\Rehmati\Desktop\MyNewProject\node_modules\react-native-screens\android\src\main\jni\CMakeLists.txt

@@ -1,5 +1,6 @@
 {
   "buildFiles": [
+    "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native-nitro-modules\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native-reanimated\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native-safe-area-context\\android\\src\\main\\jni\\CMakeLists.txt",
     "C:\\Users\\Rehmati\\Desktop\\MyNewProject\\node_modules\\react-native-screens\\android\\src\\main\\jni\\CMakeLists.txt",
@@ -33,6 +34,11 @@
         "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\2321ffcfab7439b6200de4724cf7ba76\\workspace\\transformed\\react-android-0.85.3-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
         "C:\\Users\\Rehmati\\.gradle\\caches\\9.3.1\\transforms\\2321ffcfab7439b6200de4724cf7ba76\\workspace\\transformed\\react-android-0.85.3-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so"
       ]
+    },
+    "react_codegen_NitroModulesSpec::@472a82f9c57d3d3b8644": {
+      "toolchain": "toolchain",
+      "abi": "armeabi-v7a",
+      "artifactName": "react_codegen_NitroModulesSpec"
     },
     "react_codegen_rnreanimated::@8afabad14bfffa3f8b9a": {
       "toolchain": "toolchain",

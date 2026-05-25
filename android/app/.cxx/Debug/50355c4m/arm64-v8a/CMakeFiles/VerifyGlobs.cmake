@@ -12,6 +12,30 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   file(TOUCH_NOCREATE "C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/arm64-v8a/CMakeFiles/cmake.verify_globs")
 endif()
 
+# react_codegen_SRCS at C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/*.cpp")
+set(OLD_GLOB
+  "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/NitroModulesSpec-generated.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/arm64-v8a/CMakeFiles/cmake.verify_globs")
+endif()
+
+# react_codegen_SRCS at C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/react/renderer/components/NitroModulesSpec/*.cpp")
+set(OLD_GLOB
+  "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/react/renderer/components/NitroModulesSpec/ComponentDescriptors.cpp"
+  "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/react/renderer/components/NitroModulesSpec/EventEmitters.cpp"
+  "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/react/renderer/components/NitroModulesSpec/Props.cpp"
+  "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/react/renderer/components/NitroModulesSpec/ShadowNodes.cpp"
+  "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-nitro-modules/android/build/generated/source/codegen/jni/react/renderer/components/NitroModulesSpec/States.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "C:/Users/Rehmati/Desktop/MyNewProject/android/app/.cxx/Debug/50355c4m/arm64-v8a/CMakeFiles/cmake.verify_globs")
+endif()
+
 # react_codegen_SRCS at C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-reanimated/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
 file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/Users/Rehmati/Desktop/MyNewProject/node_modules/react-native-reanimated/android/build/generated/source/codegen/jni/*.cpp")
 set(OLD_GLOB
