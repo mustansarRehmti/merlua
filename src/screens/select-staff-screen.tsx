@@ -87,7 +87,7 @@ export function SelectStaffScreen({ navigation }: any) {
         <TouchableOpacity
           style={[styles.primarySubmitBtn, !selectedStaffId && styles.primarySubmitBtnDisabled]}
           disabled={!selectedStaffId}
-          onPress={() => navigation.navigate('BookingReview')}
+          onPress={() => navigation.navigate('SelectSlot')}
           activeOpacity={0.9}
         >
           <Text style={styles.primarySubmitBtnText}>Confirm Professional & Proceed</Text>

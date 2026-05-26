@@ -4,24 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../theme/theme';
 
 export function ProfileScreen({ navigation }: any) {
-  // Mocking standard dynamic retrieval of authenticated session parameters
   const [fullName, setFullName] = useState('Mustansar Rehmati');
-  const [email] = useState('mustansar@lamstan.com'); // Kept unmodifiable to preserve user identity auth integrity
+  const [email] = useState('mustansar@lamstan.com'); 
   const [phone, setPhone] = useState('+92 300 1234567');
 
-  // Interactive Component Trackers
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Simple validation parameters 
   const hasChanges = fullName.trim().length > 1 && phone.trim().length >= 8;
 
   const handleUpdateProfile = () => {
     if (!hasChanges || isUpdating) return;
-
     setIsUpdating(true);
 
-    // Simulate database update network transmission latency
     setTimeout(() => {
       setIsUpdating(false);
       Alert.alert(
@@ -41,7 +36,6 @@ export function ProfileScreen({ navigation }: any) {
           <Text style={styles.screenMainHeading}>My Profile</Text>
         </View>
         
-        {/* Navigation Action Dismiss Trigger back to Main Platform Track */}
         <TouchableOpacity 
           style={styles.closeVectorTouchArea} 
           onPress={() => navigation.navigate('SelectService')}
@@ -56,7 +50,24 @@ export function ProfileScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.sectionLabelHeader}>Personal Credentials</Text>
+        {/* PREMIUM APPOINTMENTS GATEWAY INTERACTIVE CARD BLOCK */}
+        <Text style={styles.sectionLabelHeader}>Your Schedule</Text>
+        <TouchableOpacity 
+          style={styles.appointmentsDashboardActionCard}
+          onPress={() => navigation.navigate('AppointmentsDashboard')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.dashboardCardContent}>
+            <Text style={styles.dashboardCardEmoji}>📅</Text>
+            <View style={styles.dashboardCardTextWrapper}>
+              <Text style={styles.dashboardCardMainTitle}>Track Active Reservations</Text>
+              <Text style={styles.dashboardCardSubTitle}>View, manage, or reschedule ongoing studio sessions</Text>
+            </View>
+          </View>
+          <Text style={styles.dashboardCardArrow}>➔</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.sectionLabelHeader, { marginTop: Theme.spacing.m }]}>Personal Credentials</Text>
         
         <View style={styles.formContainerWrapper}>
           
@@ -204,6 +215,50 @@ const styles = StyleSheet.create({
     letterSpacing: 2, 
     color: Theme.colors.textSecondary, 
     marginBottom: Theme.spacing.s 
+  },
+  appointmentsDashboardActionCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.luxuryBlack,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: Theme.colors.luxuryBlack,
+    borderRadius: 0,
+    marginBottom: 12
+  },
+  dashboardCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8
+  },
+  dashboardCardEmoji: {
+    fontSize: 20,
+    marginRight: 14
+  },
+  dashboardCardTextWrapper: {
+    flex: 1
+  },
+  dashboardCardMainTitle: {
+    fontFamily: Theme.fonts.bold,
+    fontSize: 13,
+    color: Theme.colors.softIvory,
+    textTransform: 'uppercase',
+    letterSpacing: 1
+  },
+  dashboardCardSubTitle: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 11,
+    color: '#8E8A80',
+    marginTop: 2,
+    lineHeight: 14
+  },
+  dashboardCardArrow: {
+    fontSize: 14,
+    color: Theme.colors.softIvory,
+    fontFamily: Theme.fonts.bold
   },
   formContainerWrapper: { 
     marginBottom: Theme.spacing.m 

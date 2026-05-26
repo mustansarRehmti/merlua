@@ -51,7 +51,7 @@ export function SelectServiceScreen({ navigation }: any) {
 
   const handleSelection = (id: string) => {
     setSelectedItemId(id);
-    setSelectedAddOnIds([]); // Clear any previous sub selections instantly
+    setSelectedAddOnIds([]); 
   };
 
   const handleToggleAddOn = (addOnId: string) => {
@@ -69,6 +69,18 @@ export function SelectServiceScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.outerContainer} edges={['top', 'left', 'right']}>
       <BookingHeader title="Select Experience" step={1} />
+
+      {/* EDITORIAL USER UTILITY BAR */}
+      <View style={styles.utilityAccountRow}>
+        <Text style={styles.clientGreetingText}>Hello, Mustansar</Text>
+        <TouchableOpacity 
+          style={styles.profileActionLink}
+          onPress={() => navigation.navigate('Profile')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.profileLinkText}>Account & Bookings 👤 ↗</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Segmented Controller Switcher */}
       <View style={styles.switcherWrapper}>
@@ -149,10 +161,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Theme.colors.softIvory
   },
+  utilityAccountRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: Theme.spacing.m,
+    marginTop: Theme.spacing.s,
+    paddingBottom: Theme.spacing.xs,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)'
+  },
+  clientGreetingText: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 12,
+    color: Theme.colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1
+  },
+  profileActionLink: {
+    paddingVertical: 4,
+    paddingLeft: 8
+  },
+  profileLinkText: {
+    fontFamily: Theme.fonts.bold,
+    fontSize: 12,
+    color: Theme.colors.luxuryBlack,
+    letterSpacing: 0.5
+  },
   switcherWrapper: {
     flexDirection: 'row',
     marginHorizontal: Theme.spacing.m,
-    marginTop: Theme.spacing.xs,
+    marginTop: Theme.spacing.s,
     borderWidth: 1,
     borderColor: Theme.colors.luxuryBlack,
     backgroundColor: Theme.colors.white

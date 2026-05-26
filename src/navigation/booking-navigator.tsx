@@ -20,7 +20,7 @@ export function BookingNavigator() {
       <Stack.Screen name="BookingReview" component={BookingReviewScreen} />
       <Stack.Screen name="CustomerDetails" component={CustomerDetailsScreen} />
       <Stack.Screen name="AppointmentsDashboard" component={AppointmentsDashboardScreen} />
-       <Stack.Screen name="Profle" component={ProfileScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 }
