@@ -1,214 +1,385 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
-  withSpring,
-  interpolateColor
-} from 'react-native-reanimated';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Theme } from '../theme/theme';
-
-interface AddOnItem {
-  id: string;
-  name: string;
-  price: number;
-  durationMinutes: number;
-}
+import type {
+  CatalogAddOn,
+  CatalogItem,
+  CatalogLoadStatus,
+} from '../features/catalog/catalog.types';
+import {
+  formatDuration,
+  formatMoney,
+} from '../features/catalog/catalog.utils';
 
 interface ServiceCardProps {
-  id: string;
-  name: string;
-  description: string;
-  durationMinutes: number;
-  price: number;
-  imageUrl: string;
+  item: CatalogItem;
   isSelected: boolean;
-  onPress: () => void;
-  addOns?: AddOnItem[];
-  selectedAddOnIds?: string[];
-  onToggleAddOn?: (addOnId: string) => void;
-  isPackageVariant?: boolean;
+  onSelect: () => void;
+  addOns: CatalogAddOn[];
+  selectedAddOnIds: string[];
+  onToggleAddOn: (addOnId: string) => void;
+  addOnsStatus: CatalogLoadStatus;
+  addOnsErrorMessage?: string | null;
+  onRetryAddOns: () => void;
 }
 
-export function ServiceCard({ 
-  name, 
-  description, 
-  durationMinutes, 
-  price, 
-  imageUrl, 
-  isSelected, 
-  onPress,
-  addOns = [],
-  selectedAddOnIds = [],
+export function ServiceCard({
+  item,
+  isSelected,
+  onSelect,
+  addOns,
+  selectedAddOnIds,
   onToggleAddOn,
-  isPackageVariant = false 
+  addOnsStatus,
+  addOnsErrorMessage,
+  onRetryAddOns,
 }: ServiceCardProps) {
-  
-  const progress = useSharedValue(0);
-  const pressScale = useSharedValue(1);
+  const isPackage = item.type === 'package';
+  const servicesInPackage = isPackage ? item.services ?? [] : [];
+
+  // ─── Package image slideshow ────────────────────────────────
+  const packageImages: string[] = servicesInPackage
+    .map(s => s.imageUrl)
+    .filter(Boolean) as string[];
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    progress.value = withTiming(isSelected ? 1 : 0, { duration: 250 });
-  }, [isSelected]);
+    if (!isPackage || packageImages.length <= 1) return;
 
-  const cardStyle = useAnimatedStyle(() => {
-    const bgShift = interpolateColor(
-      progress.value,
-      [0, 1],
-      [Theme.colors.white, Theme.colors.warmStone]
-    );
-    return {
-      backgroundColor: bgShift,
-      borderColor: isSelected ? Theme.colors.luxuryBlack : Theme.colors.border,
-      transform: [{ scale: pressScale.value }]
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex(prev => (prev === packageImages.length - 1 ? 0 : prev + 1));
+    }, 3000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  });
+  }, [isPackage, packageImages.length]);
 
-  const expandableDrawerStyle = useAnimatedStyle(() => {
-    return {
-      height: withTiming(isSelected ? 'auto' : 0, { duration: 300 }),
-      opacity: progress.value,
-      marginTop: withTiming(isSelected ? Theme.spacing.s : 0, { duration: 200 })
-    };
-  });
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [item.id]);
 
+  // ─── Meta subtext (service count + duration) ─────────────────
+  const metaSubtextContent = (() => {
+    if (isPackage) {
+      const count = servicesInPackage.length;
+      const dur = formatDuration(item.durationMinutes);
+      return `${count} service${count !== 1 ? 's' : ''} • ${dur}`;
+    }
+    return formatDuration(item.durationMinutes);
+  })();
+
+  // ─── Render ────────────────────────────────────────────────
   return (
-    <Animated.View style={[styles.cardContainer, cardStyle]}>
+    <View
+      style={[
+        styles.cardContainer,
+        isSelected && styles.cardContainerSelected,
+      ]}
+    >
       <TouchableOpacity
-        activeOpacity={1}
-        onPress={onPress}
-        onPressIn={() => { pressScale.value = withSpring(0.99, { damping: 15 }); }}
-        onPressOut={() => { pressScale.value = withSpring(1, { damping: 15 }); }}
+        accessibilityRole="button"
+        accessibilityState={{ selected: isSelected }}
+        accessibilityLabel={`${item.name}, ${formatMoney(item.priceCents)}, ${metaSubtextContent}`}
+        activeOpacity={0.85}
+        onPress={onSelect}
         style={styles.clickableRegion}
       >
-        <View style={styles.topInfoRow}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.mediaFrame} resizeMode="cover" />
-          ) : (
-            <View style={[styles.mediaFrame, styles.fallbackMedia]} />
-          )}
+        {/* ── Image area ────────────────────────────────── */}
+        {isPackage && packageImages.length > 0 ? (
+          <View style={styles.mediaFrame}>
+            {packageImages.map((uri, idx) => (
+              <Image
+                key={idx}
+                source={{ uri }}
+                style={[
+                  styles.mediaFrame,
+                  {
+                    position: idx === currentIndex ? 'relative' : 'absolute',
+                    opacity: idx === currentIndex ? 1 : 0,
+                  },
+                ]}
+                resizeMode="cover"
+              />
+            ))}
 
-          <View style={styles.textStack}>
-            {isPackageVariant && (
-              <View style={styles.packageBadge}>
-                <Text style={styles.packageBadgeText}>Curated Package</Text>
+            {packageImages.length > 1 && (
+              <View style={styles.dotsContainer}>
+                {packageImages.map((_, idx) => (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.dot,
+                      idx === currentIndex && styles.dotActive,
+                    ]}
+                  />
+                ))}
               </View>
             )}
-            <Text style={styles.titleText}>{name}</Text>
-            <Text style={styles.metaSubtext}>{durationMinutes} Mins • Base Treatment</Text>
+          </View>
+        ) : item.imageUrl ? (
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.mediaFrame}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.mediaFrame, styles.fallbackMedia]}>
+            <Text style={styles.fallbackMediaText}>No image</Text>
+          </View>
+        )}
+
+        {/* ── Text + price ──────────────────────────────── */}
+        <View style={styles.textStack}>
+          <View style={styles.badgeRow}>
+            <Text style={styles.typeBadgeText}>
+              {isPackage ? 'Package' : 'Service'}
+            </Text>
+
+            {item.categoryName ? (
+              <Text style={styles.categoryText}>{item.categoryName}</Text>
+            ) : null}
           </View>
 
-          <View style={styles.pricingSection}>
-            <Text style={styles.priceLabel}>${Number(price).toFixed(2)}</Text>
-            <View style={[styles.radioFrame, isSelected && styles.radioFrameActive]}>
-              {isSelected && <View style={styles.radioCenterNode} />}
-            </View>
-          </View>
+          <Text style={styles.titleText}>{item.name}</Text>
+          <Text style={styles.metaSubtext}>{metaSubtextContent}</Text>
         </View>
 
-        {/* Expandable Menu Details (Add-ons & System Descriptions) */}
-        <Animated.View style={[styles.drawerContent, expandableDrawerStyle]}>
-          <View style={styles.divider} />
-          <Text style={styles.descriptionBody}>{description}</Text>
+        <View style={styles.pricingSection}>
+          <Text style={styles.priceLabel}>{formatMoney(item.priceCents)}</Text>
 
-          {/* Render Addons Block if items are available inside the specification array */}
-          {addOns.length > 0 && (
-            <View style={styles.addOnSection}>
-              <Text style={styles.addOnSectionHeader}>Enhance Treatment (Optional Add-ons)</Text>
-              {addOns.map((addOn) => {
-                const isAddOnChecked = selectedAddOnIds.includes(addOn.id);
-                return (
-                  <TouchableOpacity
-                    key={addOn.id}
-                    activeOpacity={0.8}
-                    onPress={() => onToggleAddOn?.(addOn.id)}
-                    style={[styles.addOnRow, isAddOnChecked && styles.addOnRowChecked]}
-                  >
-                    <View style={styles.addOnLeft}>
-                      <View style={[styles.squareBox, isAddOnChecked && styles.squareBoxChecked]}>
-                        {isAddOnChecked && <Text style={styles.checkmarkIcon}>✓</Text>}
-                      </View>
-                      <Text style={styles.addOnName}>{addOn.name}</Text>
-                    </View>
-                    <Text style={styles.addOnMeta}>+{addOn.durationMinutes}m (+${addOn.price})</Text>
-                  </TouchableOpacity>
-                );
-              })}
+          <View style={[styles.radioFrame, isSelected && styles.radioFrameActive]}>
+            {isSelected ? <View style={styles.radioCenterNode} /> : null}
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {/* ── Expanded drawer ───────────────────────────── */}
+      {isSelected && (
+        <View style={styles.drawerContent}>
+          <View style={styles.divider} />
+
+          {/* Description */}
+          {item.description ? (
+            <Text style={styles.descriptionBody}>{item.description}</Text>
+          ) : (
+            <Text style={styles.descriptionBodyMuted}>
+              No description has been added for this {item.type}.
+            </Text>
+          )}
+
+          {/* ── Included services (only for packages) ─── */}
+          {isPackage && servicesInPackage.length > 0 && (
+            <View style={styles.includedServicesContainer}>
+              <Text style={styles.sectionHeader}>Included services</Text>
+              {servicesInPackage.map(svc => (
+                <View key={svc.id} style={styles.includedServiceRow}>
+                  <Text style={styles.includedServiceName}>{svc.name}</Text>
+                  <Text style={styles.includedServiceDuration}>
+                    {formatDuration(svc.durationMinutes)}
+                  </Text>
+                </View>
+              ))}
             </View>
           )}
-        </Animated.View>
-      </TouchableOpacity>
-    </Animated.View>
+
+          {/* ── Add‑ons (only for services) ──────────── */}
+          {item.type === 'service' && (
+            <>
+              <Text style={styles.addOnSectionHeader}>Optional add-ons</Text>
+
+              {addOnsStatus === 'loading' ? (
+                <View style={styles.feedbackRow}>
+                  <ActivityIndicator size="small" color={Theme.colors.luxuryBlack} />
+                  <Text style={styles.feedbackText}>Loading add-ons...</Text>
+                </View>
+              ) : null}
+
+              {addOnsStatus === 'failed' ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>
+                    {addOnsErrorMessage ?? 'Could not load add-ons.'}
+                  </Text>
+
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`Retry loading add-ons for ${item.name}`}
+                    onPress={onRetryAddOns}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.retryText}>Try again</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+
+              {addOnsStatus === 'succeeded' && addOns.length === 0 ? (
+                <Text style={styles.descriptionBodyMuted}>
+                  No add-ons are available for this service.
+                </Text>
+              ) : null}
+
+              {addOnsStatus === 'succeeded'
+                ? addOns.map(addOn => {
+                    const isChecked = selectedAddOnIds.includes(addOn.id);
+
+                    return (
+                      <TouchableOpacity
+                        key={addOn.id}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: isChecked }}
+                        accessibilityLabel={`${addOn.name}, ${formatMoney(addOn.priceCents)}, ${formatDuration(addOn.durationMinutes)}`}
+                        activeOpacity={0.8}
+                        onPress={() => onToggleAddOn(addOn.id)}
+                        style={[styles.addOnRow, isChecked && styles.addOnRowChecked]}
+                      >
+                        <View style={styles.addOnLeft}>
+                          {addOn.imageUrl ? (
+                            <Image
+                              source={{ uri: addOn.imageUrl }}
+                              style={styles.addOnImage}
+                              resizeMode="cover"
+                            />
+                          ) : null}
+
+                          <View style={[styles.squareBox, isChecked && styles.squareBoxChecked]}>
+                            {isChecked ? <Text style={styles.checkmarkIcon}>✓</Text> : null}
+                          </View>
+
+                          <View style={styles.addOnTextStack}>
+                            <Text style={styles.addOnName}>{addOn.name}</Text>
+
+                            {addOn.description ? (
+                              <Text style={styles.addOnDescription} numberOfLines={2}>
+                                {addOn.description}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
+
+                        <View style={styles.addOnMetaStack}>
+                          <Text style={styles.addOnPrice}>
+                            +{formatMoney(addOn.priceCents)}
+                          </Text>
+                          <Text style={styles.addOnDuration}>
+                            {formatDuration(addOn.durationMinutes)}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })
+                : null}
+            </>
+          )}
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   cardContainer: {
-    borderWidth: 1,
-    marginBottom: Theme.spacing.s,
-    borderRadius: 0,
-    overflow: 'hidden'
-  },
-  clickableRegion: {
-    padding: Theme.spacing.s
-  },
-  topInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  mediaFrame: {
-    width: 64,
-    height: 64,
-    backgroundColor: Theme.colors.warmStone
-  },
-  fallbackMedia: {
+    backgroundColor: Theme.colors.white,
     borderWidth: 1,
     borderColor: Theme.colors.border,
-    borderStyle: 'dashed'
+    marginBottom: Theme.spacing.s,
+  },
+  cardContainerSelected: {
+    backgroundColor: Theme.colors.warmStone,
+    borderColor: Theme.colors.luxuryBlack,
+  },
+  clickableRegion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Theme.spacing.s,
+  },
+  mediaFrame: {
+    width: 76,
+    height: 76,
+    backgroundColor: Theme.colors.warmStone,
+  },
+  fallbackMedia: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+  },
+  fallbackMediaText: {
+    fontFamily: Theme.fonts.medium,
+    fontSize: 10,
+    textTransform: 'uppercase',
+    color: Theme.colors.textSecondary,
+  },
+  dotsContainer: {
+    position: 'absolute',
+    bottom: 6,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: 4,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Theme.colors.warmStone,
+  },
+  dotActive: {
+    backgroundColor: Theme.colors.luxuryBlack,
+    width: 12,
   },
   textStack: {
     flex: 1,
     marginLeft: Theme.spacing.s,
-    paddingRight: Theme.spacing.xs
+    paddingRight: Theme.spacing.xs,
   },
-  packageBadge: {
-    backgroundColor: Theme.colors.luxuryBlack,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginBottom: 4
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginBottom: 4,
   },
-  packageBadgeText: {
-    color: Theme.colors.softIvory,
+  typeBadgeText: {
     fontFamily: Theme.fonts.bold,
     fontSize: 9,
     textTransform: 'uppercase',
-    letterSpacing: 1
+    letterSpacing: 1,
+    color: Theme.colors.textSecondary,
+    marginRight: 8,
+  },
+  categoryText: {
+    fontFamily: Theme.fonts.medium,
+    fontSize: 10,
+    color: Theme.colors.textSecondary,
   },
   titleText: {
     fontFamily: Theme.fonts.semibold,
-    fontSize: 15,
+    fontSize: 14,
     color: Theme.colors.textPrimary,
     textTransform: 'uppercase',
-    letterSpacing: 0.5
+    letterSpacing: 0.5,
   },
   metaSubtext: {
     fontFamily: Theme.fonts.regular,
     fontSize: 12,
     color: Theme.colors.textSecondary,
-    marginTop: 4
+    marginTop: 4,
   },
   pricingSection: {
     alignItems: 'flex-end',
-    justifyContent: 'center'
+    justifyContent: 'space-between',
+    minHeight: 68,
   },
   priceLabel: {
     fontFamily: Theme.fonts.bold,
-    fontSize: 16,
+    fontSize: 14,
     color: Theme.colors.textPrimary,
-    marginBottom: 8
   },
   radioFrame: {
     width: 18,
@@ -216,89 +387,180 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.colors.border,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   radioFrameActive: {
-    borderColor: Theme.colors.luxuryBlack
+    borderColor: Theme.colors.luxuryBlack,
   },
   radioCenterNode: {
     width: 10,
     height: 10,
-    backgroundColor: Theme.colors.luxuryBlack
+    backgroundColor: Theme.colors.luxuryBlack,
   },
   drawerContent: {
-    overflow: 'hidden'
+    paddingHorizontal: Theme.spacing.s,
+    paddingBottom: Theme.spacing.s,
   },
   divider: {
     height: 1,
     backgroundColor: Theme.colors.border,
-    width: '100%',
-    marginBottom: 12
+    marginBottom: Theme.spacing.s,
   },
   descriptionBody: {
     fontFamily: Theme.fonts.regular,
     fontSize: 13,
-    lineHeight: 20,
-    color: Theme.colors.textSecondary
+    lineHeight: 19,
+    color: Theme.colors.textPrimary,
   },
-  addOnSection: {
-    marginTop: 18,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    padding: 12,
-    borderWidth: 0.5,
-    borderColor: Theme.colors.border
+  descriptionBodyMuted: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 12,
+    lineHeight: 18,
+    color: Theme.colors.textSecondary,
+    fontStyle: 'italic',
   },
+  // ─── Included services list (packages) ──────────────
+  includedServicesContainer: {
+    marginTop: Theme.spacing.s,
+    marginBottom: Theme.spacing.s,
+  },
+  sectionHeader: {
+    fontFamily: Theme.fonts.bold,
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    color: Theme.colors.textSecondary,
+    marginBottom: Theme.spacing.xs,
+  },
+  includedServiceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: Theme.colors.border,
+  },
+  includedServiceName: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 12,
+    color: Theme.colors.textPrimary,
+    flex: 1,
+    marginRight: 8,
+  },
+  includedServiceDuration: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 12,
+    color: Theme.colors.textSecondary,
+  },
+  // ─── Add‑ons section ────────────────────────────────
   addOnSectionHeader: {
     fontFamily: Theme.fonts.bold,
-    fontSize: 11,
+    fontSize: 10,
     textTransform: 'uppercase',
-    color: Theme.colors.textPrimary,
-    letterSpacing: 1,
-    marginBottom: 10
+    letterSpacing: 1.5,
+    color: Theme.colors.textSecondary,
+    marginTop: Theme.spacing.s,
+    marginBottom: Theme.spacing.xs,
+  },
+  feedbackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Theme.spacing.xs,
+  },
+  feedbackText: {
+    marginLeft: Theme.spacing.xs,
+    fontFamily: Theme.fonts.regular,
+    fontSize: 12,
+    color: Theme.colors.textSecondary,
+  },
+  errorBox: {
+    padding: Theme.spacing.s,
+    borderWidth: 1,
+    borderColor: '#E1A3A3',
+    backgroundColor: '#FFF6F6',
+  },
+  errorText: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#BA1A1A',
+  },
+  retryText: {
+    marginTop: Theme.spacing.xs,
+    fontFamily: Theme.fonts.bold,
+    fontSize: 12,
+    textDecorationLine: 'underline',
+    color: Theme.colors.luxuryBlack,
   },
   addOnRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 0.5,
-    borderColor: Theme.colors.warmStone
-  },
-  addOnRowChecked: {
-    backgroundColor: 'rgba(15,15,15,0.03)'
-  },
-  addOnLeft: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  squareBox: {
-    width: 16,
-    height: 16,
+    backgroundColor: Theme.colors.white,
     borderWidth: 1,
     borderColor: Theme.colors.border,
-    marginRight: 10,
+    padding: Theme.spacing.xs,
+    marginTop: Theme.spacing.xs,
+  },
+  addOnRowChecked: {
+    borderColor: Theme.colors.luxuryBlack,
+  },
+  addOnLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: Theme.spacing.xs,
+  },
+  addOnImage: {
+    width: 40,
+    height: 40,
+    marginRight: Theme.spacing.xs,
+    backgroundColor: Theme.colors.warmStone,
+  },
+  squareBox: {
+    width: 18,
+    height: 18,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Theme.colors.white
+    marginRight: Theme.spacing.xs,
   },
   squareBoxChecked: {
+    borderColor: Theme.colors.luxuryBlack,
     backgroundColor: Theme.colors.luxuryBlack,
-    borderColor: Theme.colors.luxuryBlack
   },
   checkmarkIcon: {
     color: Theme.colors.softIvory,
-    fontSize: 10,
     fontFamily: Theme.fonts.bold,
-    lineHeight: 12
+    fontSize: 12,
+  },
+  addOnTextStack: {
+    flex: 1,
   },
   addOnName: {
-    fontFamily: Theme.fonts.medium,
-    fontSize: 13,
-    color: Theme.colors.textPrimary
-  },
-  addOnMeta: {
-    fontFamily: Theme.fonts.regular,
+    fontFamily: Theme.fonts.semibold,
     fontSize: 12,
-    color: Theme.colors.textSecondary
-  }
+    color: Theme.colors.textPrimary,
+  },
+  addOnDescription: {
+    marginTop: 2,
+    fontFamily: Theme.fonts.regular,
+    fontSize: 11,
+    lineHeight: 15,
+    color: Theme.colors.textSecondary,
+  },
+  addOnMetaStack: {
+    alignItems: 'flex-end',
+  },
+  addOnPrice: {
+    fontFamily: Theme.fonts.bold,
+    fontSize: 12,
+    color: Theme.colors.textPrimary,
+  },
+  addOnDuration: {
+    marginTop: 2,
+    fontFamily: Theme.fonts.regular,
+    fontSize: 10,
+    color: Theme.colors.textSecondary,
+  },
 });

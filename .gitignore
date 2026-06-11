@@ -2,6 +2,9 @@
 node_modules/
 jspm_packages/
 web_modules/
+android/.gradle/
+android/app/.cxx/
+
 
 # Lock files (Uncomment the line below if you absolutely must ignore it)
 # package-lock.json
@@ -38,3 +41,5 @@ logs/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+

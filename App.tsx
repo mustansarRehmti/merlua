@@ -1,18 +1,18 @@
 import React from 'react';
-// import { NavigationContainer } from '@react-navigation/native';
-import { AppNavigator } from './src/navigation/app-navigator';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { TenantProvider } from './src/context/tenant-context';
+import { Provider } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { store } from './src/app/store';
+import { AppNavigator } from './src/navigation/app-navigator';
 
 export default function App() {
   return (
-    <NavigationContainer>
-    <TenantProvider>
+    <Provider store={store}>
       <SafeAreaProvider>
-      <AppNavigator />
-     </SafeAreaProvider>
-    </TenantProvider>
-    </NavigationContainer>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </Provider>
   );
 }
