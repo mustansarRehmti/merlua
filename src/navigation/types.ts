@@ -1,21 +1,34 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
 export type AuthStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  Verification: { email: string };
-  forgot: { email?: string };
-  MagicLinkCheck: { email: string };
+  TenantGateway: undefined;
+  CustomerLogin: undefined;
+  CustomerOtpVerification: {
+    email: string;
+    session: string;
+  };
 };
 
 export type BookingStackParamList = {
   SelectService: undefined;
   SelectStaff: undefined;
   SelectSlot: undefined;
-  BookingReview: undefined; 
+  BookingReview: undefined;
   CustomerDetails: { remarks?: string } | undefined;
+  AppointmentsDashboard:
+    | {
+        customerData?: {
+          fullName: string;
+          email: string;
+          phone: string;
+          historicalRemarks?: string;
+        };
+      }
+    | undefined;
   Profile: undefined;
 };
 
 export type RootStackParamList = {
-  Auth: undefined;
-  BookingFlow: undefined; // Connected directly upon login/auth bypass
+  Auth: NavigatorScreenParams<AuthStackParamList> | undefined;
+  BookingFlow: NavigatorScreenParams<BookingStackParamList> | undefined;
 };
