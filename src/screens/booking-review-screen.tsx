@@ -1,111 +1,157 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { BookingLayout } from '../components/booking-layout';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import {
+  setBookingNotes,
+  setIsPaymentComplete,
+  setPromoCodeName,
+} from '../features/booking/booking-draft.slice';
+import {
+  selectDraftAddOnIds,
+  selectDraftCatalogItem,
+  selectDraftIsPaymentComplete,
+  selectDraftNotes,
+  selectDraftPromoCodeName,
+  selectDraftSelectedSlot,
+  selectDraftSelectedStaff,
+} from '../features/booking/booking-draft.selectors';
+import { selectActiveTenantSlug } from '../features/tenant/tenant.selectors';
+import { selectCatalogAddOns } from '../features/catalog/catalog.selectors';
+import {
+  formatDuration,
+  formatMoney,
+} from '../features/catalog/catalog.utils';
+import {
+  getBookingDurationMinutes,
+  getBookingTotalCents,
+  getSelectedAddOns,
+} from '../features/booking/booking-flow.utils';
 import { Theme } from '../theme/theme';
 
-export function BookingReviewScreen({ navigation, route }: any) {
-  // Grab passing initial remarks if any existed
-  const [remarks, setRemarks] = useState(route?.params?.remarks || '');
-  const [isFocused, setIsFocused] = useState(false);
+export function BookingReviewScreen({ navigation }: any) {
+  const dispatch = useAppDispatch();
 
-  // Dynamic state to simulate cart data matching the web visual screenshot
-  const [cartItems, setCartItems] = useState([
-    { id: '1', name: 'Editorial Precision Cut', price: 120.00, details: 'with Elena Rostova' },
-    { id: '2', name: 'Balayage & Soft Ivory Toning', price: 280.00, details: 'with Marcus Vance' },
-  ]);
+  const activeSlug = useAppSelector(selectActiveTenantSlug);
+  const selectedItem = useAppSelector(selectDraftCatalogItem);
+  const selectedAddOnIds = useAppSelector(selectDraftAddOnIds);
+  const selectedStaff = useAppSelector(selectDraftSelectedStaff);
+  const selectedSlot = useAppSelector(selectDraftSelectedSlot);
+  const notes = useAppSelector(selectDraftNotes);
+  const promoCodeName = useAppSelector(selectDraftPromoCodeName);
+  const isPaymentComplete = useAppSelector(selectDraftIsPaymentComplete);
 
-  const handleRemoveItem = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-  };
+  const availableAddOns = useAppSelector(state =>
+    activeSlug && selectedItem
+      ? selectCatalogAddOns(state, activeSlug, selectedItem.type, selectedItem.id)
+      : [],
+  );
 
-  const totalDue = cartItems.reduce((sum, item) => sum + item.price, 0);
+  const selectedAddOns = useMemo(
+    () => getSelectedAddOns(availableAddOns, selectedAddOnIds),
+    [availableAddOns, selectedAddOnIds],
+  );
 
-  const handleAddAnotherService = () => {
-    // Cycles back to Step 1 cleanly while retaining multi-cart memory states
-    navigation.navigate('SelectService');
-  };
+  const totalCents = getBookingTotalCents(selectedItem, selectedAddOns);
+  const totalDuration = getBookingDurationMinutes(selectedItem, selectedAddOns);
 
-  const handleProceedToDetails = () => {
-    navigation.navigate('CustomerDetails', { remarks });
+  const handleContinue = () => {
+    if (!selectedItem || !selectedStaff || !selectedSlot) {
+      Alert.alert('Booking incomplete', 'Choose a service, professional, date, and time first.');
+      return;
+    }
+
+    navigation.navigate('CustomerDetails');
   };
 
   return (
     <BookingLayout
       step={4}
-      stepTitle="Review & Cart"
+      stepTitle="Review Booking"
       onBackPress={() => navigation.goBack()}
-      onForwardPress={cartItems.length > 0 ? handleProceedToDetails : undefined}
-      forwardLabel="Authorize via Stripe"
-      isForwardDisabled={cartItems.length === 0}
+      onForwardPress={handleContinue}
+      forwardLabel="Continue to Details"
     >
-      <ScrollView style={styles.scrollCanvas} showsVerticalScrollIndicator={false}>
-        
-        {/* 1. SELECTION TRAY / ITEMS ADDED SECTION */}
-        <Text style={styles.sectionLabel}>Selected Treatments ({cartItems.length})</Text>
-        <View style={styles.contentGroup}>
-          {cartItems.map((item) => (
-            <View key={item.id} style={styles.cartItemRow}>
-              <View style={styles.itemMeta}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemSubText}>{item.details}</Text>
-              </View>
-              <View style={styles.itemActionBlock}>
-                <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-                <TouchableOpacity onPress={() => handleRemoveItem(item.id)} activeOpacity={0.7}>
-                  <Text style={styles.removeText}>Remove</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
+      <ScrollView style={styles.canvas} showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionLabel}>Appointment Summary</Text>
 
-          {/* "+ Add Another Service" link button that loops back to Step 1 */}
-          <TouchableOpacity 
-            style={styles.addServiceButton} 
-            onPress={handleAddAnotherService}
-            
-            activeOpacity={0.8}
-          >
-            <Text style={styles.addServiceButtonText}>+ Add Another Service</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 2. REPLICA OF THE WEB BOOKING SUMMARY / CART PANEL */}
-        <Text style={styles.sectionLabel}>Cart Summary</Text>
-        <View style={styles.receiptCard}>
-          <Text style={styles.receiptTitle}>Booking Summary</Text>
-          
-          {cartItems.map((item) => (
-            <View key={`summary-${item.id}`} style={styles.receiptRow}>
-              <Text style={styles.receiptItemText} numberOfLines={1}>{item.name}</Text>
-              <Text style={styles.receiptItemPrice}>${item.price.toFixed(2)}</Text>
+        <View style={styles.card}>
+          <View style={styles.rowBetween}>
+            <View style={styles.mainMeta}>
+              <Text style={styles.title}>{selectedItem?.name ?? 'Selected booking'}</Text>
+              <Text style={styles.subtitle}>
+                {selectedItem?.type === 'package' ? 'Package' : 'Service'} • {formatDuration(totalDuration)}
+              </Text>
             </View>
-          ))}
+
+            <Text style={styles.price}>{formatMoney(totalCents)}</Text>
+          </View>
 
           <View style={styles.divider} />
 
-          <View style={styles.receiptRow}>
-            <Text style={styles.totalLabel}>Total Due</Text>
-            <Text style={styles.totalValue}>${totalDue.toFixed(2)}</Text>
-          </View>
+          <InfoRow label="Professional" value={selectedStaff?.name ?? 'Any available professional'} />
+          <InfoRow label="Time" value={selectedSlot?.label ?? 'No time selected'} />
+
+          {selectedAddOns.length > 0 && (
+            <View style={styles.addOnBlock}>
+              <Text style={styles.subSectionLabel}>Selected Add-ons</Text>
+              {selectedAddOns.map(addOn => (
+                <View key={addOn.id} style={styles.addOnRow}>
+                  <Text style={styles.addOnName}>+ {addOn.name}</Text>
+                  <Text style={styles.addOnPrice}>{formatMoney(addOn.priceCents)}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
-        {/* 3. ADDITIONAL REMARKS INPUT CONTROLS */}
-        <Text style={styles.sectionLabel}>Additional Remarks</Text>
-        <View style={styles.remarksWrapper}>
+        <Text style={styles.sectionLabel}>Promo Code</Text>
+        <View style={styles.inputCard}>
           <TextInput
-            style={[
-              styles.remarksInputField, 
-              isFocused && { borderColor: Theme.colors.luxuryBlack }
-            ]}
-            placeholder="Add any specific guidelines, preferences, or instructions here..."
-            placeholderTextColor={Theme.colors.border}
-            value={remarks}
-            onChangeText={setRemarks}
+            style={styles.input}
+            placeholder="Enter promo code"
+            placeholderTextColor={Theme.colors.textSecondary}
+            autoCapitalize="characters"
+            value={promoCodeName}
+            onChangeText={value => dispatch(setPromoCodeName(value))}
+          />
+        </View>
+
+        <Text style={styles.sectionLabel}>Payment Preference</Text>
+        <View style={styles.optionGroup}>
+          <PaymentOption
+            title="Pay Deposit"
+            subtitle="Pay the required deposit now. Balance is due at the appointment."
+            selected={!isPaymentComplete}
+            onPress={() => dispatch(setIsPaymentComplete(false))}
+          />
+
+          <PaymentOption
+            title="Pay Full Amount"
+            subtitle="Pay the full booking amount now."
+            selected={isPaymentComplete}
+            onPress={() => dispatch(setIsPaymentComplete(true))}
+          />
+        </View>
+
+        <Text style={styles.sectionLabel}>Notes</Text>
+        <View style={styles.inputCard}>
+          <TextInput
+            style={[styles.input, styles.notesInput]}
+            placeholder="Add preferences, allergies, or anything the salon should know..."
+            placeholderTextColor={Theme.colors.textSecondary}
             multiline
-            numberOfLines={4}
             textAlignVertical="top"
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            value={notes}
+            onChangeText={value => dispatch(setBookingNotes(value))}
           />
         </View>
 
@@ -115,10 +161,48 @@ export function BookingReviewScreen({ navigation, route }: any) {
   );
 }
 
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  );
+}
+
+function PaymentOption({
+  title,
+  subtitle,
+  selected,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      style={[styles.paymentOption, selected && styles.paymentOptionSelected]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      <View style={[styles.radio, selected && styles.radioSelected]}>
+        {selected && <View style={styles.radioDot} />}
+      </View>
+
+      <View style={styles.paymentTextBlock}>
+        <Text style={styles.paymentTitle}>{title}</Text>
+        <Text style={styles.paymentSubtitle}>{subtitle}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  scrollCanvas: {
+  canvas: {
     flex: 1,
-    backgroundColor: Theme.colors.softIvory
+    backgroundColor: Theme.colors.softIvory,
   },
   sectionLabel: {
     fontFamily: Theme.fonts.bold,
@@ -128,138 +212,158 @@ const styles = StyleSheet.create({
     color: Theme.colors.textSecondary,
     marginLeft: Theme.spacing.m,
     marginTop: Theme.spacing.m,
-    marginBottom: Theme.spacing.xs
+    marginBottom: Theme.spacing.xs,
   },
-  contentGroup: {
-    paddingHorizontal: Theme.spacing.m
+  card: {
+    backgroundColor: Theme.colors.white,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    marginHorizontal: Theme.spacing.m,
+    padding: Theme.spacing.s,
   },
-  cartItemRow: {
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Theme.spacing.s,
+  },
+  mainMeta: {
+    flex: 1,
+  },
+  title: {
+    fontFamily: Theme.fonts.semibold,
+    fontSize: 17,
+    color: Theme.colors.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  subtitle: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 13,
+    color: Theme.colors.textSecondary,
+    marginTop: 4,
+  },
+  price: {
+    fontFamily: Theme.fonts.bold,
+    fontSize: 19,
+    color: Theme.colors.textPrimary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Theme.colors.warmStone,
+    marginVertical: Theme.spacing.s,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Theme.spacing.s,
+    marginBottom: 10,
+  },
+  infoLabel: {
+    fontFamily: Theme.fonts.medium,
+    fontSize: 12,
+    color: Theme.colors.textSecondary,
+  },
+  infoValue: {
+    flex: 1,
+    textAlign: 'right',
+    fontFamily: Theme.fonts.semibold,
+    fontSize: 12,
+    color: Theme.colors.textPrimary,
+  },
+  subSectionLabel: {
+    fontFamily: Theme.fonts.bold,
+    fontSize: 10,
+    color: Theme.colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  addOnBlock: {
+    marginTop: Theme.spacing.s,
+    paddingTop: Theme.spacing.s,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.warmStone,
+  },
+  addOnRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  addOnName: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 13,
+    color: Theme.colors.textSecondary,
+  },
+  addOnPrice: {
+    fontFamily: Theme.fonts.medium,
+    fontSize: 13,
+    color: Theme.colors.textPrimary,
+  },
+  inputCard: {
+    backgroundColor: Theme.colors.white,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    marginHorizontal: Theme.spacing.m,
+  },
+  input: {
+    paddingHorizontal: Theme.spacing.s,
+    paddingVertical: 15,
+    fontFamily: Theme.fonts.regular,
+    fontSize: 14,
+    color: Theme.colors.textPrimary,
+  },
+  notesInput: {
+    minHeight: 110,
+  },
+  optionGroup: {
+    paddingHorizontal: Theme.spacing.m,
+    gap: Theme.spacing.xs,
+  },
+  paymentOption: {
     backgroundColor: Theme.colors.white,
     borderWidth: 1,
     borderColor: Theme.colors.border,
     padding: Theme.spacing.s,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Theme.spacing.xs
   },
-  itemMeta: {
+  paymentOptionSelected: {
+    borderColor: Theme.colors.luxuryBlack,
+    backgroundColor: Theme.colors.warmStone,
+  },
+  radio: {
+    width: 22,
+    height: 22,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Theme.spacing.s,
+  },
+  radioSelected: {
+    borderColor: Theme.colors.luxuryBlack,
+  },
+  radioDot: {
+    width: 12,
+    height: 12,
+    backgroundColor: Theme.colors.luxuryBlack,
+  },
+  paymentTextBlock: {
     flex: 1,
-    paddingRight: Theme.spacing.s
   },
-  itemName: {
+  paymentTitle: {
     fontFamily: Theme.fonts.semibold,
     fontSize: 14,
     color: Theme.colors.textPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5
   },
-  itemSubText: {
+  paymentSubtitle: {
     fontFamily: Theme.fonts.regular,
     fontSize: 12,
     color: Theme.colors.textSecondary,
-    marginTop: 2
-  },
-  itemActionBlock: {
-    alignItems: 'flex-end'
-  },
-  itemPrice: {
-    fontFamily: Theme.fonts.bold,
-    fontSize: 15,
-    color: Theme.colors.textPrimary
-  },
-  removeText: {
-    fontFamily: Theme.fonts.medium,
-    fontSize: 11,
-    color: '#BA1A1A',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 4
-  },
-  addServiceButton: {
-    borderWidth: 1,
-    borderColor: Theme.colors.luxuryBlack,
-    backgroundColor: 'transparent',
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Theme.spacing.xs,
-    borderRadius: 0
-  },
-  addServiceButtonText: {
-    fontFamily: Theme.fonts.bold,
-    fontSize: 12,
-    color: Theme.colors.luxuryBlack,
-    textTransform: 'uppercase',
-    letterSpacing: 1
-  },
-  receiptCard: { 
-    backgroundColor: Theme.colors.white, 
-    marginHorizontal: Theme.spacing.m, 
-    padding: Theme.spacing.m, 
-    borderWidth: 1, 
-    borderColor: Theme.colors.border,
-    borderRadius: 0
-  },
-  receiptTitle: { 
-    fontFamily: Theme.fonts.bold,
-    fontSize: 13, 
-    color: Theme.colors.textPrimary, 
-    marginBottom: Theme.spacing.s, 
-    textTransform: 'uppercase', 
-    letterSpacing: 1 
-  },
-  receiptRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    marginBottom: 8 
-  },
-  receiptItemText: { 
-    fontFamily: Theme.fonts.regular,
-    fontSize: 13, 
-    color: Theme.colors.textSecondary,
-    flex: 1,
-    paddingRight: Theme.spacing.s
-  },
-  receiptItemPrice: { 
-    fontFamily: Theme.fonts.medium,
-    fontSize: 13, 
-    color: Theme.colors.textPrimary 
-  },
-  divider: { 
-    height: 1, 
-    backgroundColor: Theme.colors.warmStone, 
-    marginVertical: Theme.spacing.s 
-  },
-  totalLabel: { 
-    fontFamily: Theme.fonts.bold,
-    fontSize: 14, 
-    textTransform: 'uppercase',
-    color: Theme.colors.textPrimary,
-    letterSpacing: 0.5
-  },
-  totalValue: { 
-    fontFamily: Theme.fonts.bold,
-    fontSize: 18, 
-    color: Theme.colors.textPrimary 
-  },
-  remarksWrapper: {
-    paddingHorizontal: Theme.spacing.m,
-    marginBottom: Theme.spacing.s
-  },
-  remarksInputField: {
-    backgroundColor: Theme.colors.white,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    padding: Theme.spacing.s,
-    fontSize: 14,
-    color: Theme.colors.textPrimary,
-    fontFamily: Theme.fonts.regular,
-    height: 100,
-    borderRadius: 0
+    lineHeight: 17,
+    marginTop: 3,
   },
   bottomBuffer: {
-    height: Theme.spacing.xl
-  }
+    height: Theme.spacing.xl,
+  },
 });

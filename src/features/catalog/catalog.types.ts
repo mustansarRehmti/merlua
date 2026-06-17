@@ -3,6 +3,13 @@ import type { ApiErrorResponse } from '../../lib/api/api.types';
 export type CatalogItemType = 'service' | 'package';
 export type CatalogLoadStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 
+export interface CatalogConsentTemplate {
+  id: string;
+  name: string;
+  description?: string | null;
+  htmlContent?: string | null;
+}
+
 export interface CatalogAddOn {
   id: string;
   name: string;
@@ -21,6 +28,9 @@ export interface CatalogItem {
   priceCents: number;
   imageUrl: string | null;
   categoryName: string | null;
+
+  consentTemplateId?: string | null;
+  consentTemplate?: CatalogConsentTemplate | null;
 
   services?: CatalogItem[];
 }

@@ -1,310 +1,246 @@
-/* eslint-disable @typescript-eslint/no-shadow */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { BookingLayout } from '../components/booking-layout';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { setCustomerDetails } from '../features/booking/booking-draft.slice';
+import {
+  selectDraftCatalogItem,
+  selectDraftCustomerDetails,
+} from '../features/booking/booking-draft.selectors';
+import { selectCurrentCustomerSession } from '../features/auth/auth.selectors';
+import { getConsentTemplatesFromItem } from '../features/booking/booking-flow.utils';
 import { Theme } from '../theme/theme';
 
-export function CustomerDetailsScreen({ navigation, route }: any) {
-  const historicalRemarks = route?.params?.remarks || '';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PLACEHOLDER_COLOR = '#9CA3AF';
 
-  // Form Field States
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
+export function CustomerDetailsScreen({ navigation }: any) {
+  const dispatch = useAppDispatch();
 
-  // Better email validation regex
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const currentSession = useAppSelector(selectCurrentCustomerSession);
+  const customerDetails = useAppSelector(selectDraftCustomerDetails);
+  const selectedItem = useAppSelector(selectDraftCatalogItem);
 
-  // Form Validation: Fixed validation logic
-  const isFormValid = fullName.trim().length > 1 && 
-                      isValidEmail(email) &&
-                      phone.trim().length >= 8;
+  const [name, setName] = useState(customerDetails.name);
+  const [email, setEmail] = useState(
+    customerDetails.email || currentSession?.email || '',
+  );
+  const [phone, setPhone] = useState(customerDetails.phone);
 
-  const handleProceedToPayment = () => {
-    if (!isFormValid || isProcessing) return;
+  const consentTemplates = useMemo(
+    () => getConsentTemplatesFromItem(selectedItem),
+    [selectedItem],
+  );
 
-    setIsProcessing(true);
+  useEffect(() => {
+    if (!customerDetails.email && currentSession?.email) {
+      setEmail(currentSession.email);
+      dispatch(setCustomerDetails({ email: currentSession.email }));
+    }
+  }, [currentSession?.email, customerDetails.email, dispatch]);
 
-    // Simulate Stripe payment gateway latency
-    setTimeout(() => {
-      setIsProcessing(false);
-      
-      // Navigate forward and pass the customer data including historical remarks
-      navigation.reset({
-        index: 0,
-        routes: [{ 
-          name: 'AppointmentsDashboard',
-          params: {
-            customerData: {
-              fullName,
-              email,
-              phone,
-              historicalRemarks
-            }
-          }
-        }],
-      });
-    }, 1800);
+  const handleContinue = () => {
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = phone.trim();
+
+    if (normalizedName.length < 2) {
+      Alert.alert('Check your name', 'Enter the customer full name.');
+      return;
+    }
+
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      Alert.alert('Check your email', 'Enter a valid email address.');
+      return;
+    }
+
+    if (normalizedPhone.length < 7) {
+      Alert.alert('Check your phone', 'Enter a valid phone number.');
+      return;
+    }
+
+    dispatch(
+      setCustomerDetails({
+        name: normalizedName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+      }),
+    );
+
+    navigation.navigate(consentTemplates.length > 0 ? 'ConsentForm' : 'PaymentSummary');
   };
 
   return (
     <BookingLayout
-      step={5}
+      step={4}
       stepTitle="Customer Details"
       onBackPress={() => navigation.goBack()}
-      onForwardPress={undefined} 
+      onForwardPress={handleContinue}
+      forwardLabel={consentTemplates.length > 0 ? 'Continue to Consent' : 'Continue to Summary'}
     >
-      <ScrollView 
-        style={styles.scrollCanvas} 
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Text style={styles.sectionLabelHeader}>Intake Questionnaire Form</Text>
-        
-        {/* Show historical remarks if they exist */}
-        {historicalRemarks ? (
-          <View style={styles.remarksContainer}>
-            <Text style={styles.remarksTitle}>Previous Remarks</Text>
-            <Text style={styles.remarksText}>{historicalRemarks}</Text>
-          </View>
-        ) : null}
-        
-        <View style={styles.formContainerWrapper}>
-          
-          {/* 1. FULL NAME FIELD */}
-          <View style={styles.inputStackFieldCell}>
-            <Text style={[styles.fieldLabelLabel, focusedField === 'name' && styles.fieldLabelActive]}>
-              Full Name <Text style={styles.asteriskIndicator}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.textInputFieldFrame, focusedField === 'name' && styles.textInputFieldFrameFocused]}
-              placeholder="e.g. Alexander Wright"
-              placeholderTextColor="#8E8A80"
-              value={fullName}
-              onChangeText={setFullName}
-              onFocus={() => setFocusedField('name')}
-              onBlur={() => setFocusedField(null)}
-              autoCapitalize="words"
-              autoCorrect={false}
-              editable={!isProcessing}
-            />
-          </View>
+        <ScrollView
+          style={styles.canvas}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.introTitle}>Who is this appointment for?</Text>
+          <Text style={styles.introText}>
+            Enter the customer details for this booking. Placeholder text is only an example.
+          </Text>
 
-          {/* 2. EMAIL ADDRESS FIELD */}
-          <View style={styles.inputStackFieldCell}>
-            <Text style={[styles.fieldLabelLabel, focusedField === 'email' && styles.fieldLabelActive]}>
-              Email Address <Text style={styles.asteriskIndicator}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.textInputFieldFrame, focusedField === 'email' && styles.textInputFieldFrameFocused]}
-              placeholder="alexander@merlua.com"
-              placeholderTextColor="#8E8A80"
-              value={email}
-              onChangeText={setEmail}
-              onFocus={() => setFocusedField('email')}
-              onBlur={() => setFocusedField(null)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isProcessing}
-            />
-          </View>
+          <Field
+            label="Full name"
+            value={name}
+            onChangeText={setName}
+            placeholder="Emily Carter"
+            autoCapitalize="words"
+          />
 
-          {/* 3. PHONE NUMBER FIELD */}
-          <View style={styles.inputStackFieldCell}>
-            <Text style={[styles.fieldLabelLabel, focusedField === 'phone' && styles.fieldLabelActive]}>
-              Phone Number <Text style={styles.asteriskIndicator}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.textInputFieldFrame, focusedField === 'phone' && styles.textInputFieldFrameFocused]}
-              placeholder="+1 (555) 019-2834"
-              placeholderTextColor="#8E8A80"
-              value={phone}
-              onChangeText={setPhone}
-              onFocus={() => setFocusedField('phone')}
-              onBlur={() => setFocusedField(null)}
-              keyboardType="phone-pad"
-              editable={!isProcessing}
-            />
-          </View>
+          <Field
+            label="Email address"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="emily.carter@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!currentSession?.email}
+          />
 
-          {/* 4. EXPLICIT PROCEED TO PAY INTERACTIVE BUTTON */}
-          <TouchableOpacity
-            style={[
-              styles.payActionButton,
-              (!isFormValid || isProcessing) && styles.payActionButtonDisabled
-            ]}
-            disabled={!isFormValid || isProcessing}
-            onPress={handleProceedToPayment}
-            activeOpacity={0.9}
-          >
-            {isProcessing ? (
-              <View style={styles.loadingButtonContent}>
-                <ActivityIndicator size="small" color={Theme.colors.softIvory} />
-                <Text style={styles.payActionButtonText}>Authorizing Securely...</Text>
-              </View>
-            ) : (
-              <Text style={styles.payActionButtonText}>Proceed to Pay ($400.00)</Text>
-            )}
-          </TouchableOpacity>
+          <Field
+            label="Phone number"
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="+1 (555) 014-7821"
+            keyboardType="phone-pad"
+          />
 
-        </View>
-
-        {/* SECURITY & ENCRYPTION DISCLOSURE */}
-        <View style={styles.securityEncryptionNoticeCard}>
-          <Text style={styles.lockVectorIcon}>✧</Text>
-          <View style={styles.noticeTextStack}>
-            <Text style={styles.noticeMainTitle}>Encrypted Stripe Payment Terminal</Text>
-            <Text style={styles.noticeBodyDescription}>
-              Connection paths route securely through AES-256 merchant encryption standards. Booking states update instantaneously in client dashboard archives upon clearing verification metrics.
+          <View style={styles.noticeBox}>
+            <Text style={styles.noticeTitle}>Booking protection</Text>
+            <Text style={styles.noticeText}>
+              Your appointment is created only after you confirm the final summary.
             </Text>
           </View>
-        </View>
-
-        <View style={styles.layoutBottomBuffer} />
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BookingLayout>
   );
 }
 
+function Field({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  autoCapitalize = 'none',
+  editable = true,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+  keyboardType?: 'default' | 'email-address' | 'phone-pad';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  editable?: boolean;
+}) {
+  return (
+    <View style={styles.fieldBlock}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        style={[styles.input, !editable && styles.inputDisabled]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={PLACEHOLDER_COLOR}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+        editable={editable}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  scrollCanvas: { 
-    flex: 1, 
-    backgroundColor: Theme.colors.softIvory 
+  flex: {
+    flex: 1,
   },
-  sectionLabelHeader: { 
-    fontFamily: Theme.fonts.bold, 
-    fontSize: 11, 
-    textTransform: 'uppercase', 
-    letterSpacing: 2, 
-    color: Theme.colors.textSecondary, 
-    marginLeft: Theme.spacing.m, 
-    marginTop: Theme.spacing.m, 
-    marginBottom: Theme.spacing.s 
+  canvas: {
+    flex: 1,
+    backgroundColor: Theme.colors.softIvory,
   },
-  remarksContainer: {
-    marginHorizontal: Theme.spacing.m,
-    marginBottom: Theme.spacing.m,
-    padding: Theme.spacing.s,
+  content: {
+    padding: Theme.spacing.m,
+  },
+  introTitle: {
+    fontFamily: Theme.fonts.semibold,
+    fontSize: 22,
+    color: Theme.colors.textPrimary,
+    marginBottom: 8,
+  },
+  introText: {
+    fontFamily: Theme.fonts.regular,
+    fontSize: 14,
+    color: Theme.colors.textSecondary,
+    lineHeight: 21,
+    marginBottom: Theme.spacing.l,
+  },
+  fieldBlock: {
+    marginBottom: Theme.spacing.s,
+  },
+  label: {
+    fontFamily: Theme.fonts.bold,
+    fontSize: 10,
+    color: Theme.colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1.3,
+    marginBottom: 8,
+  },
+  input: {
     backgroundColor: Theme.colors.white,
     borderWidth: 1,
     borderColor: Theme.colors.border,
-  },
-  remarksTitle: {
-    fontFamily: Theme.fonts.bold,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    color: Theme.colors.textSecondary,
-    marginBottom: 4,
-  },
-  remarksText: {
+    paddingHorizontal: Theme.spacing.s,
+    paddingVertical: 16,
     fontFamily: Theme.fonts.regular,
+    fontSize: 15,
+    color: Theme.colors.textPrimary,
+  },
+  inputDisabled: {
+    backgroundColor: Theme.colors.warmStone,
+    color: Theme.colors.textSecondary,
+  },
+  noticeBox: {
+    borderWidth: 1,
+    borderColor: Theme.colors.warmStone,
+    backgroundColor: Theme.colors.white,
+    padding: Theme.spacing.s,
+    marginTop: Theme.spacing.s,
+  },
+  noticeTitle: {
+    fontFamily: Theme.fonts.semibold,
     fontSize: 14,
     color: Theme.colors.textPrimary,
-    lineHeight: 20,
+    marginBottom: 4,
   },
-  formContainerWrapper: { 
-    paddingHorizontal: Theme.spacing.m 
-  },
-  inputStackFieldCell: { 
-    marginBottom: 20 
-  },
-  fieldLabelLabel: { 
-    fontFamily: Theme.fonts.semibold, 
-    fontSize: 11, 
-    textTransform: 'uppercase', 
-    letterSpacing: 1, 
-    color: Theme.colors.textSecondary, 
-    marginBottom: 8 
-  },
-  fieldLabelActive: { 
-    color: Theme.colors.luxuryBlack 
-  },
-  asteriskIndicator: { 
-    color: Theme.colors.luxuryBlack 
-  },
-  textInputFieldFrame: { 
-    backgroundColor: Theme.colors.white, 
-    borderWidth: 1, 
-    borderColor: Theme.colors.border, 
-    paddingHorizontal: Theme.spacing.s, 
-    paddingVertical: 16, 
-    fontSize: 14, 
-    color: Theme.colors.textPrimary, 
-    fontFamily: Theme.fonts.regular, 
-    borderRadius: 0 
-  },
-  textInputFieldFrameFocused: { 
-    borderColor: Theme.colors.luxuryBlack, 
-    backgroundColor: Theme.colors.white 
-  },
-  payActionButton: {
-    backgroundColor: Theme.colors.luxuryBlack,
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Theme.spacing.xs,
-    marginBottom: Theme.spacing.m,
-    borderRadius: 0
-  },
-  payActionButtonDisabled: {
-    backgroundColor: Theme.colors.border,
-    opacity: 0.5
-  },
-  payActionButtonText: {
-    fontFamily: Theme.fonts.bold,
-    color: Theme.colors.softIvory,
+  noticeText: {
+    fontFamily: Theme.fonts.regular,
     fontSize: 13,
-    textTransform: 'uppercase',
-    letterSpacing: 2
+    lineHeight: 19,
+    color: Theme.colors.textSecondary,
   },
-  loadingButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  securityEncryptionNoticeCard: { 
-    flexDirection: 'row', 
-    marginHorizontal: Theme.spacing.m, 
-    marginTop: Theme.spacing.xs, 
-    padding: Theme.spacing.s, 
-    backgroundColor: Theme.colors.white, 
-    borderWidth: 1, 
-    borderColor: Theme.colors.border, 
-    alignItems: 'flex-start' 
-  },
-  lockVectorIcon: { 
-    fontSize: 18, 
-    color: Theme.colors.luxuryBlack, 
-    marginRight: 12, 
-    fontFamily: Theme.fonts.bold, 
-    lineHeight: 20 
-  },
-  noticeTextStack: { 
-    flex: 1 
-  },
-  noticeMainTitle: { 
-    fontFamily: Theme.fonts.bold, 
-    fontSize: 11, 
-    textTransform: 'uppercase', 
-    letterSpacing: 1, 
-    color: Theme.colors.textPrimary, 
-    marginBottom: 4 
-  },
-  noticeBodyDescription: { 
-    fontFamily: Theme.fonts.regular, 
-    fontSize: 12, 
-    color: Theme.colors.textSecondary, 
-    lineHeight: 18 
-  },
-  layoutBottomBuffer: { 
-    height: Theme.spacing.xl 
-  }
 });
