@@ -15,6 +15,16 @@ export type BookingStackParamList = {
   SelectSlot: undefined;
   BookingReview: undefined;
   CustomerDetails: { remarks?: string } | undefined;
+  ConsentForm: undefined;
+  PaymentSummary: undefined;
+  BookingSuccess:
+    | {
+        bookingGroupId?: string | null;
+        appointmentIds?: string[];
+        clientSecret?: string | null;
+        sessionId?: string | null;
+      }
+    | undefined;
   AppointmentsDashboard:
     | {
         customerData?: {

@@ -1,6 +1,7 @@
 import { ENV } from '../../config/env';
 import type {
   CatalogAddOn,
+  CatalogConsentTemplate,
   CatalogItem,
   CatalogItemType,
 } from './catalog.types';
@@ -72,7 +73,6 @@ function extractArray(value: unknown, preferredKeys: string[]): unknown[] {
 }
 
 function toCents(record: Record<string, unknown>): number {
-  // Explicit cent fields
   const explicitCents = readNumber(record, [
     'priceCents',
     'amountCents',
@@ -81,14 +81,13 @@ function toCents(record: Record<string, unknown>): number {
 
   if (explicitCents !== null) return Math.max(0, Math.round(explicitCents));
 
-  // Decimal price fields (including package-specific ones)
   const decimalAmount = readNumber(record, [
     'price',
     'amount',
     'cost',
     'basePrice',
     'packagePrice',
-    'finalPrice',   // <-- ADDED for packages
+    'finalPrice',
   ]);
 
   return decimalAmount === null ? 0 : Math.max(0, Math.round(decimalAmount * 100));
@@ -102,7 +101,7 @@ function toDurationMinutes(record: Record<string, unknown>): number {
     'timeMinutes',
     'serviceDuration',
     'packageDuration',
-    'totalDuration',   // <-- ADDED for packages
+    'totalDuration',
   ]);
 
   return duration === null ? 0 : Math.max(0, Math.round(duration));
@@ -153,6 +152,29 @@ function resolveCategoryName(record: Record<string, unknown>): string | null {
   return readString(categoryRecord, ['name', 'title', 'categoryName']);
 }
 
+function resolveConsentTemplate(
+  record: Record<string, unknown>,
+): CatalogConsentTemplate | null {
+  const templateRecord =
+    asRecord(record.consentTemplate) ??
+    asRecord(record.consent) ??
+    asRecord(record.consentForm);
+
+  if (!templateRecord) return null;
+
+  const id = readString(templateRecord, ['id', 'templateId', 'consentTemplateId']);
+  const name = readString(templateRecord, ['name', 'title']);
+
+  if (!id || !name) return null;
+
+  return {
+    id,
+    name,
+    description: readString(templateRecord, ['description', 'summary']),
+    htmlContent: readString(templateRecord, ['htmlContent', 'content', 'body']),
+  };
+}
+
 function normalizeItem(
   value: unknown,
   type: CatalogItemType,
@@ -174,6 +196,12 @@ function normalizeItem(
 
   if (!id || !name) return null;
 
+  const consentTemplate = resolveConsentTemplate(record);
+  const consentTemplateId =
+    readString(record, ['consentTemplateId', 'consentId', 'consentFormId']) ??
+    consentTemplate?.id ??
+    null;
+
   return {
     id,
     type,
@@ -184,6 +212,8 @@ function normalizeItem(
     priceCents: toCents(record),
     imageUrl: resolveImageUrl(record),
     categoryName: resolveCategoryName(record),
+    consentTemplateId,
+    consentTemplate,
   };
 }
 

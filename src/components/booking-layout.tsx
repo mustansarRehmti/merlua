@@ -24,7 +24,6 @@ export function BookingLayout({
 }: BookingLayoutProps) {
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right']}>
-      {/* Editorial Navigation Header Block */}
       <View style={styles.headerContainer}>
         <View style={styles.headerTopRow}>
           {onBackPress ? (
@@ -34,23 +33,20 @@ export function BookingLayout({
           ) : (
             <Text style={styles.brandLogoText}>MERLUA</Text>
           )}
-          <Text style={styles.progressCounter}>Metrics {step} of 5</Text>
+          <Text style={styles.progressCounter}>Step {step} of 5</Text>
         </View>
 
         <Text style={styles.screenHeading}>{stepTitle}</Text>
 
-        {/* Minimal Progress Line Tracker */}
         <View style={styles.progressTrackBackground}>
           <View style={[styles.progressIndicatorBar, { width: `${(step / 5) * 100}%` }]} />
         </View>
       </View>
 
-      {/* Dynamic Screen Canvas Element */}
       <View style={styles.mainContentFrame}>
         {children}
       </View>
 
-      {/* Persistent Global Sticky Navigation Footer */}
       {onForwardPress && (
         <View style={styles.stickyControlFooter}>
           <TouchableOpacity
@@ -59,7 +55,14 @@ export function BookingLayout({
             onPress={onForwardPress}
             activeOpacity={0.9}
           >
-            <Text style={styles.primaryActionBtnText}>{forwardLabel}</Text>
+            <Text
+              style={[
+                styles.primaryActionBtnText,
+                isForwardDisabled && styles.primaryActionBtnTextDisabled,
+              ]}
+            >
+              {forwardLabel}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -142,8 +145,10 @@ const styles = StyleSheet.create({
     borderRadius: 0
   },
   primaryActionBtnDisabled: {
-    backgroundColor: Theme.colors.border,
-    opacity: 0.4
+    backgroundColor: Theme.colors.warmStone,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    opacity: 1
   },
   primaryActionBtnText: {
     fontFamily: Theme.fonts.bold,
@@ -151,5 +156,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textTransform: 'uppercase',
     letterSpacing: 2
-  }
+  },
+  primaryActionBtnTextDisabled: {
+    color: Theme.colors.textSecondary,
+  },
 });

@@ -5,9 +5,12 @@ import { SelectStaffScreen } from '../screens/select-staff-screen';
 import { SelectSlotScreen } from '../screens/select-slot-screen';
 import { BookingReviewScreen } from '../screens/booking-review-screen';
 import { CustomerDetailsScreen } from '../screens/customer-details-screen';
-import { AppointmentsDashboardScreen } from '../screens/appointments-dashboard-screen'; 
-import { BookingStackParamList } from './types';
+import { ConsentFormScreen } from '../screens/consent-form-screen';
+import { PaymentSummaryScreen } from '../screens/payment-summary-screen';
+import { BookingSuccessScreen } from '../screens/booking-success-screen';
+import { AppointmentsDashboardScreen } from '../screens/appointments-dashboard-screen';
 import { ProfileScreen } from '../screens/profile-screen';
+import { BookingStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<BookingStackParamList>();
 
@@ -19,6 +22,9 @@ export function BookingNavigator() {
       <Stack.Screen name="SelectSlot" component={SelectSlotScreen} />
       <Stack.Screen name="BookingReview" component={BookingReviewScreen} />
       <Stack.Screen name="CustomerDetails" component={CustomerDetailsScreen} />
+      <Stack.Screen name="ConsentForm" component={ConsentFormScreen} />
+      <Stack.Screen name="PaymentSummary" component={PaymentSummaryScreen} />
+      <Stack.Screen name="BookingSuccess" component={BookingSuccessScreen} />
       <Stack.Screen name="AppointmentsDashboard" component={AppointmentsDashboardScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
